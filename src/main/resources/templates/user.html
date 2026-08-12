@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Support Ticket Management - Home</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <header>
+        <h1>Support Ticket Management System</h1>
+        <nav>
+            <a href="/">Submit Ticket</a>
+            <a href="/status">Check Status</a>
+            <a href="/admin">Admin Dashboard</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h2>Submit a New Ticket</h2>
+
+        <div th:if="${successMessage}" class="alert success">
+            <p th:text="${successMessage}"></p>
+            <p>Your Ticket ID is: <strong th:text="${generatedTicketId}"></strong></p>
+        </div>
+
+        <div th:if="${error}" class="alert error">
+            <p th:text="${error}"></p>
+        </div>
+
+        <form action="/ticket" method="POST" class="ticket-form">
+            <div class="form-group">
+                <label for="customerName">Customer Name:</label>
+                <input type="text" id="customerName" name="customerName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Ticket Description:</label>
+                <textarea id="description" name="description" rows="5" required></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn primary">Submit Ticket</button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

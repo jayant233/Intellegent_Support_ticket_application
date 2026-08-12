@@ -1,0 +1,10 @@
+com\support\ticket\repository\TicketRepository.class
+com\support\ticket\service\KeywordClassifierService.class
+com\support\ticket\controller\AdminController.class
+com\support\ticket\util\TicketIdGenerator.class
+com\support\ticket\exception\TicketNotFoundException.class
+com\support\ticket\SupportTicketApplication.class
+com\support\ticket\model\Ticket.class
+com\support\ticket\service\TicketService.class
+com\support\ticket\exception\DatabaseException.class
+com\support\ticket\controller\UserController.class
