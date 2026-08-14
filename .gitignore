@@ -1,0 +1,102 @@
+# ============================================================
+# .gitignore — Intelligent Support Ticket System
+# Java | Spring Boot | Maven | VS Code
+# ============================================================
+
+# ------------------------------------
+# Maven build output
+# ------------------------------------
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ------------------------------------
+# Java compiled files
+# ------------------------------------
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# ------------------------------------
+# Spring Boot specific
+# ------------------------------------
+spring-shell.log
+HELP.md
+
+# ------------------------------------
+# Logs
+# ------------------------------------
+*.log
+logs/
+log/
+
+# ------------------------------------
+# IDE — VS Code
+# ------------------------------------
+.vscode/
+*.code-workspace
+
+# ------------------------------------
+# IDE — IntelliJ IDEA
+# ------------------------------------
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ------------------------------------
+# IDE — Eclipse / STS
+# ------------------------------------
+.classpath
+.project
+.settings/
+.sts4-cache/
+bin/
+
+# ------------------------------------
+# IDE — NetBeans
+# ------------------------------------
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ------------------------------------
+# OS generated files
+# ------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ------------------------------------
+# Environment & secrets
+# ------------------------------------
+.env
+.env.local
+.env.*.local
+*.properties.local
+application-secret.properties
+
+# ------------------------------------
+# Temporary & swap files
+# ------------------------------------
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ------------------------------------
+# Package manager caches
+# ------------------------------------
+.m2/
