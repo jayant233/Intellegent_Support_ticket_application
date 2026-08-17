@@ -1,27 +1,17 @@
-package com.support.ticket.service;
-
-import com.support.ticket.exception.DatabaseException;
-import com.support.ticket.exception.TicketNotFoundException;
-import com.support.ticket.model.Ticket;
-import com.support.ticket.repository.TicketRepository;
-import com.support.ticket.util.TicketIdGenerator;
-import org.springframework.stereotype.Service;
+package com.support.ticket;
 
 import java.util.List;
 
-@Service
 public class TicketService {
 
-    private final TicketRepository ticketRepository;
+    private final TicketDAO ticketDAO;
     private final KeywordClassifierService classifierService;
     private final TicketIdGenerator ticketIdGenerator;
 
-    public TicketService(TicketRepository ticketRepository, 
-                         KeywordClassifierService classifierService, 
-                         TicketIdGenerator ticketIdGenerator) {
-        this.ticketRepository = ticketRepository;
-        this.classifierService = classifierService;
-        this.ticketIdGenerator = ticketIdGenerator;
+    public TicketService() {
+        this.ticketDAO = new TicketDAO();
+        this.classifierService = new KeywordClassifierService();
+        this.ticketIdGenerator = new TicketIdGenerator();
     }
 
     public Ticket createTicket(String customerName, String description) throws DatabaseException {
@@ -39,13 +29,13 @@ public class TicketService {
         
         ticket.setStatus("Open");
         
-        ticketRepository.save(ticket);
+        ticketDAO.saveTicket(ticket);
         
         return ticket;
     }
 
     public Ticket getTicketById(String ticketId) throws TicketNotFoundException, DatabaseException {
-        Ticket ticket = ticketRepository.findById(ticketId);
+        Ticket ticket = ticketDAO.getTicketById(ticketId);
         if (ticket == null) {
             throw new TicketNotFoundException("Ticket not found with ID: " + ticketId);
         }
@@ -53,16 +43,16 @@ public class TicketService {
     }
 
     public List<Ticket> getAllTickets() throws DatabaseException {
-        return ticketRepository.findAll();
+        return ticketDAO.getAllTickets();
     }
     
     public List<Ticket> getTicketsByFilters(String severity, String priority, String status) throws DatabaseException {
-        return ticketRepository.findByFilters(severity, priority, status);
+        return ticketDAO.getTicketsByFilters(severity, priority, status);
     }
 
     public void updateStatus(String ticketId, String newStatus) throws TicketNotFoundException, DatabaseException {
         // Validate if ticket exists first
         getTicketById(ticketId);
-        ticketRepository.updateStatus(ticketId, newStatus);
+        ticketDAO.updateTicketStatus(ticketId, newStatus);
     }
 }

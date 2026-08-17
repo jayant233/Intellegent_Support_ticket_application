@@ -1,10 +1,6 @@
-package com.support.ticket.util;
-
-import org.springframework.stereotype.Component;
+package com.support.ticket;
 
 import java.util.concurrent.atomic.AtomicInteger;
-
-@Component
 public class TicketIdGenerator {
     
     // In a real application, we would retrieve the max ID from the database, 

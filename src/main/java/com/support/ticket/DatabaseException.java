@@ -1,4 +1,4 @@
-package com.support.ticket.exception;
+package com.support.ticket;
 
 public class DatabaseException extends Exception {
     public DatabaseException(String message, Throwable cause) {

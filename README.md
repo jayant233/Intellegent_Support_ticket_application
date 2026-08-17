@@ -1,58 +1,120 @@
 # 🎫 Intelligent Support Ticket System
 
-A beginner-friendly, web-based **support ticket management application** built with Java and Spring Boot. This project demonstrates full-stack Java development using Spring MVC, Thymeleaf templating, MySQL persistence, and JUnit 5 testing — making it an ideal portfolio piece for aspiring Java developers.
+A full-stack Java web application for **automated support ticket classification and lifecycle management**. Built with **Spring Boot**, **Thymeleaf**, **Direct JDBC**, and **MySQL**, and tested end-to-end with **Microsoft Playwright** and **JUnit 5**.
+
+The application streamlines IT helpdesk workflows by automatically analyzing user-submitted problem descriptions using a keyword-based classification engine, determining the **issue category, severity, priority code, and SLA resolution target**, and persisting tickets using direct JDBC queries.
 
 ---
 
 ## 📋 Table of Contents
 
-- [Project Overview](#project-overview)
+- [Problem Statement](#problem-statement)
 - [Features](#features)
-- [Technology Stack](#technology-stack)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
 - [Project Structure](#project-structure)
-- [Prerequisites](#prerequisites)
-- [Setup Instructions](#setup-instructions)
-- [How to Run](#how-to-run)
+- [Keyword Classification & SLA Engine](#keyword-classification--sla-engine)
+- [Database Schema](#database-schema)
+- [Getting Started](#getting-started)
 - [Running Tests](#running-tests)
-- [Screenshots](#screenshots)
-- [Future Improvements](#future-improvements)
+- [Core Java & Architectural Concepts Demonstrated](#core-java--architectural-concepts-demonstrated)
+- [SQL Concepts Demonstrated](#sql-concepts-demonstrated)
+- [Playwright Automation Concepts Demonstrated](#playwright-automation-concepts-demonstrated)
 - [Author](#author)
 
 ---
 
-## 📌 Project Overview
+## 📌 Problem Statement
 
-The **Intelligent Support Ticket System** is a lightweight helpdesk application where users can submit, view, update, and resolve support tickets. It simulates a real-world IT support workflow, making it useful for learning Spring Boot fundamentals while building something practical and demonstrable.
+In customer support and IT helpdesk environments, manually sorting, prioritizing, and assigning incoming support tickets creates bottlenecks and delays incident response times. 
+
+This application provides an intelligent, automated solution:
+1. Users submit their issue through a clean web portal.
+2. The internal business logic instantly classifies the problem based on natural text keywords.
+3. Appropriate severity (e.g., *Critical*, *High*), priority codes (*P1*, *P2*, *P3*, *P4*), and Service Level Agreement (SLA) deadlines are assigned in real-time.
+4. Support teams and administrators can track, filter, search, and update ticket progress across their full lifecycle.
 
 ---
 
 ## ✨ Features
 
-- ✅ **Submit** new support tickets with title, description, and priority level
-- 📋 **View** all tickets in a paginated, sortable list
-- 🔍 **Search** tickets by keyword, status, or priority
-- ✏️ **Update** ticket details and status (Open → In Progress → Resolved)
-- 🗑️ **Delete** tickets with confirmation
-- 🏷️ **Priority tagging** — Low, Medium, High, Critical
-- 📊 **Status tracking** — Open, In Progress, Resolved, Closed
-- 🔒 Basic input validation with user-friendly error messages
+### 👤 User Portal (`/`)
+- **Ticket Submission**: Users provide their name and problem description.
+- **Automated Processing**: Instantly generates a unique ticket ID (e.g., `TKT1001`) and triggers classification.
+- **Real-time Feedback**: Displays the generated Ticket ID upon submission.
+
+### 🔎 Status Tracking Portal (`/status`)
+- **Search by Ticket ID**: Allows customers to view the current status of their support request.
+- **Detailed View**: Displays assigned category, priority, severity level, SLA hours, and live status (*Open*, *In Progress*, *Resolved*, *Closed*).
+
+### 🛠️ Admin Dashboard (`/admin`)
+- **Tabular Ticket Management**: View all submitted tickets in an organized table.
+- **Multi-criteria Filtering**: Filter tickets dynamically by severity, priority, or status.
+- **Direct Search**: Search directly for a specific Ticket ID.
+- **Status Updates**: Update the lifecycle status of any ticket with immediate persistence.
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Tech Stack
 
-| Layer         | Technology                  |
-|---------------|-----------------------------|
-| Language      | Java 17+                    |
-| Framework     | Spring Boot 3.x             |
-| Web Layer     | Spring MVC                  |
-| Templating    | Thymeleaf                   |
-| Build Tool    | Maven                       |
-| Database      | MySQL 8.x                   |
-| ORM           | Spring Data JPA (Hibernate) |
-| Frontend      | HTML5, CSS3                 |
-| Testing       | JUnit 5, Spring Boot Test   |
-| IDE           | Visual Studio Code          |
+| Layer | Technology |
+| :--- | :--- |
+| **Language** | Java 17+ (or 11+) |
+| **Framework** | Spring Boot 2.7.x / 3.x |
+| **Web & Routing** | Spring MVC (`@Controller`, `@GetMapping`, `@PostMapping`) |
+| **Templating** | Thymeleaf (`templates/user.html`, `status.html`, `admin.html`) |
+| **Database** | MySQL 8.x |
+| **Persistence** | Direct JDBC (`DriverManager`, `PreparedStatement`, `ResultSet`) |
+| **Build Tool** | Apache Maven |
+| **Testing** | JUnit 5, Microsoft Playwright for Java |
+
+---
+
+## 🏗️ Architecture
+
+The application follows a clean, interview-friendly **Controller → Service → DAO → JDBC → MySQL** architecture with distinct separation of concerns:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                           Browser                           │
+│        (user.html / status.html / admin.html via Thymeleaf) │
+└──────────────────────────────┬──────────────────────────────┘
+                               │  HTTP GET / POST
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    TicketController.java                    │
+│     @GetMapping("/")          @PostMapping("/ticket")       │
+│     @GetMapping("/status")    @PostMapping("/status")       │
+│     @GetMapping("/admin")     @PostMapping("/admin/*")      │
+└──────────────────────────────┬──────────────────────────────┘
+                               │  Coordinates Business Flow
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      TicketService.java                     │
+│    createTicket() · getTicketById() · getAllTickets() ...   │
+│     ├── TicketIdGenerator.java                              │
+│     └── KeywordClassifierService.java                       │
+└──────────────────────────────┬──────────────────────────────┘
+                               │  Calls Data Access Layer
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                       TicketDAO.java                        │
+│   saveTicket() · getTicketById() · updateTicketStatus() ... │
+└──────────────────────────────┬──────────────────────────────┘
+                               │  JDBC (PreparedStatement)
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  MySQL (support_ticket_db)                  │
+│                        tickets table                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Layer Responsibilities:
+- **Controller (`TicketController.java`)**: Handles HTTP requests, reads form inputs, interacts with the Service, and renders Thymeleaf views.
+- **Service (`TicketService.java`)**: Executes business rules (ticket creation workflow, coordinating classification with persistence).
+- **Classification Engine (`KeywordClassifierService.java`)**: Analyzes text to determine Category, Severity, Priority, and SLA hours.
+- **DAO (`TicketDAO.java`)**: Manages raw SQL execution, connection lifecycle, `PreparedStatement` parameters, and safe resource closure.
+- **Database**: Stores ticket records in MySQL.
 
 ---
 
@@ -60,153 +122,195 @@ The **Intelligent Support Ticket System** is a lightweight helpdesk application 
 
 ```
 INTELLEGENT/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/support/ticket/
-│   │   │       ├── controller/       # Spring MVC Controllers
-│   │   │       ├── model/            # Entity classes (Ticket, etc.)
-│   │   │       ├── repository/       # Spring Data JPA Repositories
-│   │   │       ├── service/          # Business logic layer
-│   │   │       └── IntellegentApplication.java
-│   │   └── resources/
-│   │       ├── templates/            # Thymeleaf HTML templates
-│   │       ├── static/               # CSS, JS, images
-│   │       └── application.properties
-│   └── test/
-│       └── java/
-│           └── com/support/ticket/   # JUnit 5 test classes
-├── pom.xml
-├── .gitignore
-└── README.md
+│
+├── pom.xml                                        # Maven configuration
+├── README.md                                      # Project documentation
+│
+├── database/
+│   └── schema.sql                                 # MySQL table DDL and seed data
+│
+├── src/main/java/com/support/ticket/
+│   ├── SupportTicketApplication.java              # Spring Boot main entry point
+│   ├── Ticket.java                                # POJO model for support tickets
+│   ├── TicketController.java                      # Unified web controller (User & Admin routes)
+│   ├── TicketService.java                         # Business logic & workflow coordinator
+│   ├── TicketDAO.java                             # Direct JDBC data access object
+│   ├── KeywordClassifierService.java              # Keyword-to-category & SLA classifier
+│   ├── TicketIdGenerator.java                     # Thread-safe Ticket ID generator
+│   ├── TicketNotFoundException.java               # Custom exception for missing tickets
+│   └── DatabaseException.java                     # Custom runtime exception for SQL errors
+│
+├── src/main/resources/
+│   ├── templates/
+│   │   ├── user.html                              # Ticket submission view
+│   │   ├── status.html                            # Ticket status lookup view
+│   │   └── admin.html                             # Admin dashboard & management view
+│   ├── static/
+│   │   └── css/                                   # Application stylesheets
+│   └── application.properties                     # Spring & server settings
+│
+└── src/test/java/playwright/
+    ├── BasePlaywrightTest.java                    # Base test with browser setup & teardown
+    ├── SubmitTicketPlaywrightTest.java            # TC01–TC04: Submission & field validation
+    ├── CheckStatusPlaywrightTest.java             # TC05–TC07: Status search & error validation
+    └── AdminDashboardPlaywrightTest.java          # TC08–TC10: Dashboard display, filters & updates
 ```
 
 ---
 
-## ✅ Prerequisites
+## 🧠 Keyword Classification & SLA Engine
 
-Make sure you have the following installed before running the project:
+The `KeywordClassifierService` evaluates user descriptions and applies the following rule matrix:
 
-- **Java JDK 17+** — [Download](https://adoptium.net/)
-- **Apache Maven 3.8+** — [Download](https://maven.apache.org/download.cgi)
-- **MySQL 8.x** — [Download](https://dev.mysql.com/downloads/)
-- **VS Code** with the [Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack)
+| Issue Category | Trigger Keywords / Phrases | Severity | Priority | SLA Target |
+| :--- | :--- | :--- | :--- | :--- |
+| **Login Issue** | `login`, `signin`, `sign in`, `authentication`, `account access`, `unable to login` | Medium | P3 | 8 Hours |
+| **Outage Issue** | `outage`, `down`, `offline`, `downtime`, `service unavailable`, `system down` | Critical | P1 | 1 Hour |
+| **Password Issue** | `password`, `forgot password`, `reset password`, `password change`, `incorrect password`, `password expired` | Low | P4 | 24 Hours |
+| **Payment Issue** | `payment`, `billing`, `invoice`, `charge`, `credit card`, `refund` | High | P2 | 4 Hours |
+| **Performance Issue** | `slow`, `performance`, `lag`, `hanging`, `freezing`, `latency` | Medium | P3 | 12 Hours |
+| **Application Error** | `error`, `exception`, `crash`, `bug`, `stacktrace`, `internal error` | High | P2 | 3 Hours |
+| **Database Issue** | `database`, `sql`, `connection pool`, `data loss`, `corruption`, `timeout` | Critical | P1 | 2 Hours |
+| **UI Bug** | `ui`, `button`, `layout`, `alignment`, `rendering`, `display` | Low | P4 | 48 Hours |
+| **Access Issue** | `access denied`, `forbidden`, `permissions`, `unauthorized`, `role`, `locked out` | High | P2 | 6 Hours |
+| **Email Issue** | `email`, `spam`, `not receiving`, `bounce`, `smtp`, `delivery` | Medium | P3 | 10 Hours |
+| **General Support** | *(Fallback when no specific keyword matches)* | Low | P4 | 48 Hours |
 
 ---
 
-## ⚙️ Setup Instructions
+## 🗄️ Database Schema
 
-### 1. Clone the Repository
+The `database/schema.sql` creates the `tickets` table:
+
+```
+┌───────────────────────────────────────────────┐
+│                    tickets                    │
+├───────────────────────────────┬───────────────┤
+│ ticket_id (PK)                │ VARCHAR(50)   │
+│ customer_name                 │ VARCHAR(100)  │
+│ description                   │ TEXT          │
+│ category                      │ VARCHAR(100)  │
+│ severity                      │ VARCHAR(50)   │
+│ priority                      │ VARCHAR(50)   │
+│ status                        │ VARCHAR(50)   │
+│ sla_hours                     │ INT           │
+└───────────────────────────────┴───────────────┘
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Java 17+** (or Java 11+)
+- **Maven 3.8+**
+- **MySQL 8.x** running locally
+
+### 1. Set Up the Database
+
+Log in to MySQL and run the schema script:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/intelligent-support-ticket-system.git
-cd intelligent-support-ticket-system
+mysql -u root -p < database/schema.sql
 ```
 
-### 2. Configure the Database
+### 2. Configure Database Credentials
 
-Log in to MySQL and create the database:
+Open `src/main/java/com/support/ticket/TicketDAO.java` and confirm/update the connection constants:
 
-```sql
-CREATE DATABASE support_ticket_db;
+```java
+private static final String URL      = "jdbc:mysql://localhost:3306/support_ticket_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true";
+private static final String USER     = "root";
+private static final String PASSWORD = "password";
 ```
 
-### 3. Update `application.properties`
-
-Open `src/main/resources/application.properties` and update your database credentials:
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/support_ticket_db
-spring.datasource.username=your_mysql_username
-spring.datasource.password=your_mysql_password
-
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-```
-
-### 4. Install Dependencies
-
-```bash
-mvn clean install
-```
-
----
-
-## ▶️ How to Run
+### 3. Build & Run the Web Application
 
 ```bash
 mvn spring-boot:run
 ```
 
-Once started, open your browser and navigate to:
-
-```
-http://localhost:8080
-```
-
-> The application will automatically create the required database tables on first run (via `ddl-auto=update`).
+Once running, navigate to:
+- **User Portal:** [http://localhost:8080/](http://localhost:8080/)
+- **Status Check:** [http://localhost:8080/status](http://localhost:8080/status)
+- **Admin Dashboard:** [http://localhost:8080/admin](http://localhost:8080/admin)
 
 ---
 
 ## 🧪 Running Tests
 
-To run all JUnit 5 tests:
+The application uses **Microsoft Playwright for Java** combined with **JUnit 5** for automated UI testing.
+
+### Run All Playwright UI Tests
+
+1. Start the application in one terminal:
+   ```bash
+   mvn spring-boot:run
+   ```
+2. In a second terminal, execute the test suite:
+   ```bash
+   mvn test
+   ```
+
+### Run a Specific Test Class
 
 ```bash
-mvn test
+mvn test -Dtest=SubmitTicketPlaywrightTest
+mvn test -Dtest=CheckStatusPlaywrightTest
+mvn test -Dtest=AdminDashboardPlaywrightTest
 ```
 
-To run a specific test class:
+### Test Coverage Matrix
 
-```bash
-mvn -Dtest=TicketServiceTest test
-```
-
-Test reports are generated in:
-
-```
-target/surefire-reports/
-```
+| Test ID | Test Class | Validated Behavior |
+| :--- | :--- | :--- |
+| **TC01** | `SubmitTicketPlaywrightTest` | Submit ticket page loads and heading is visible |
+| **TC02** | `SubmitTicketPlaywrightTest` | Form input fields and submit button are displayed |
+| **TC03** | `SubmitTicketPlaywrightTest` | Successful ticket submission and Ticket ID generation |
+| **TC04** | `SubmitTicketPlaywrightTest` | HTML5 mandatory field validation for empty submission |
+| **TC05** | `CheckStatusPlaywrightTest` | Check status page elements render properly |
+| **TC06** | `CheckStatusPlaywrightTest` | Search for a submitted ticket and verify details |
+| **TC07** | `CheckStatusPlaywrightTest` | Validation and error display for non-existent Ticket ID |
+| **TC08** | `AdminDashboardPlaywrightTest` | Admin dashboard loads and displays tickets table |
+| **TC09** | `AdminDashboardPlaywrightTest` | Dropdown filtering by severity (e.g., Critical) |
+| **TC10** | `AdminDashboardPlaywrightTest` | Administrator updates ticket status from Open → In Progress |
 
 ---
 
-## 📸 Screenshots
+## 💡 Core Java & Architectural Concepts Demonstrated
 
-> *Screenshots will be added once the UI is finalized.*
-
-| Page            | Preview                        |
-|-----------------|--------------------------------|
-| Home / Ticket List | *(coming soon)*             |
-| Create Ticket   | *(coming soon)*                |
-| Ticket Detail   | *(coming soon)*                |
+| Concept | Location | Implementation Detail |
+| :--- | :--- | :--- |
+| **Controller-Service-DAO Pattern** | Entire Project | Clear separation of routing, business logic, and persistence |
+| **Direct JDBC Resource Management** | `TicketDAO.java` | Explicit `try` / `catch` / `finally` blocks closing `ResultSet`, `PreparedStatement`, `Connection` |
+| **Encapsulation & POJO Modeling** | `Ticket.java` | Private fields with public getters, setters, and parameterized constructors |
+| **Custom Exceptions** | `TicketNotFoundException.java`, `DatabaseException.java` | Checked/unchecked exception handling across layers |
+| **Rule Matching Engine** | `KeywordClassifierService.java` | Categorization using collections (`Map<String, List<String>>`) |
+| **Thread Safety** | `TicketIdGenerator.java` | Atomic generation via `AtomicInteger` |
 
 ---
 
-## 🚀 Future Improvements
+## 📊 SQL Concepts Demonstrated
 
-- [ ] User authentication and role-based access (Admin / Agent / User)
-- [ ] Email notifications when ticket status changes
-- [ ] File attachment support for tickets
-- [ ] Dashboard with analytics and charts
-- [ ] REST API endpoints for mobile/frontend integration
-- [ ] Docker containerization for easy deployment
-- [ ] Pagination and advanced filtering
+- **DDL (`CREATE TABLE`, `DROP TABLE`)**: Table schema definitions with constraints.
+- **DML (`INSERT`, `UPDATE`, `SELECT`)**: CRUD operations using parameterized `PreparedStatement`.
+- **Dynamic Filtering (`WHERE 1=1 AND ...`)**: Programmatically appending SQL conditions for filtering.
+- **Constraints**: `PRIMARY KEY`, `NOT NULL`, and data typing.
+
+---
+
+## 🎭 Playwright Automation Concepts Demonstrated
+
+- **Modular Test Hierarchy**: Shared `@BeforeAll` and `@AfterAll` lifecycle via `BasePlaywrightTest`.
+- **Role & Label Locators**: Robust targeting via `page.getByRole()`, `page.getByLabel()`, and `locator()`.
+- **Fluent Assertions**: Using `assertThat()` for element visibility, text matching, and attribute checks.
+- **Headless Browser Execution**: Cross-browser Chromium automation.
 
 ---
 
 ## 👤 Author
 
 **Jayant**
-
 - 💼 GitHub: [@jayant233](https://github.com/jayant233)
 - 📧 Email: bjayant231@gmail.com
-
----
-
-## 📄 License
-
-This project is open-source and available under the [MIT License](LICENSE).
-
----
-
-> *Built as a learning project to demonstrate Java Spring Boot development skills.*

@@ -1,4 +1,4 @@
-package com.support.ticket.model;
+package com.support.ticket;
 
 public class Ticket {
 
